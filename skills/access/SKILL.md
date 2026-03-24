@@ -1,7 +1,7 @@
 ---
 name: access
 description: Manage Telegram channel access — approve pairings, edit allowlists, set policy
-user_invocable: true
+user-invocable: true
 ---
 
 # /telegram:access
