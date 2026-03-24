@@ -2,6 +2,12 @@
 
 所有重要變更都會記錄在此檔案中。格式基於 [Keep a Changelog](https://keepachangelog.com/zh-TW/)，版本號遵循 [Semantic Versioning](https://semver.org/lang/zh-TW/)。
 
+## [1.2.2] - 2026-03-24
+
+### 錯誤修復
+
+- 修正 skill frontmatter 格式：`user_invocable` 改為 `user-invocable`（連字號），讓 Claude Code 能正確識別可呼叫的 skill
+
 ## [1.2.1] - 2026-03-24
 
 ### 錯誤修復
