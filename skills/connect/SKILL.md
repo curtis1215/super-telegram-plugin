@@ -1,7 +1,7 @@
 ---
 name: connect
 description: Connect or disconnect this session from Telegram message routing
-user_invocable: true
+user-invocable: true
 ---
 
 # /telegram:connect

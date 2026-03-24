@@ -1,7 +1,7 @@
 ---
 name: configure
 description: Set up the Telegram channel — save the bot token and review access policy
-user_invocable: true
+user-invocable: true
 ---
 
 # /telegram:configure
