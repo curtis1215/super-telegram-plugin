@@ -2,6 +2,13 @@
 
 所有重要變更都會記錄在此檔案中。格式基於 [Keep a Changelog](https://keepachangelog.com/zh-TW/)，版本號遵循 [Semantic Versioning](https://semver.org/lang/zh-TW/)。
 
+## [1.4.0] - 2026-03-24
+
+### 新功能
+
+- 新增 `connect_session` 和 `disconnect_session` MCP tools，session 註冊改為程式化處理
+- LLM 呼叫 tool 即可完成連線，不再需要透過檔案系統 signal 操作
+
 ## [1.3.1] - 2026-03-24
 
 ### 新功能
