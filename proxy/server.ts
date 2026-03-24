@@ -457,7 +457,7 @@ async function ensureDaemon(): Promise<boolean> {
       }
       // Kickstart the service — resolve UID at runtime, not via shell expansion
       const uid = process.getuid?.() ?? 501
-      Bun.spawn(['launchctl', 'kickstart', '-k', `gui/${uid}/${LAUNCHD_LABEL}`], {
+      Bun.spawn(['launchctl', 'kickstart', `gui/${uid}/${LAUNCHD_LABEL}`], {
         stdout: 'pipe',
         stderr: 'pipe',
       })
