@@ -1,0 +1,15 @@
+{
+  "name": "super-telegram-plugin",
+  "owner": {
+    "name": "curtis1215"
+  },
+  "plugins": [
+    {
+      "name": "telegram-router",
+      "description": "Telegram channel for Claude Code with centralized daemon routing and multi-session support",
+      "category": "productivity",
+      "source": ".",
+      "homepage": "https://github.com/curtis1215/super-telegram-plugin"
+    }
+  ]
+}
