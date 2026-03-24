@@ -5,7 +5,7 @@
   },
   "plugins": [
     {
-      "name": "telegram-router",
+      "name": "super-telegram",
       "description": "Telegram channel for Claude Code with centralized daemon routing and multi-session support",
       "category": "productivity",
       "source": "./",

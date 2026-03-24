@@ -42,11 +42,8 @@ This plugin solves all three by centralizing polling in a single daemon.
 ## Installation
 
 ```bash
-# 1. Register local directory as a marketplace source
-claude plugin marketplace add ~/Dev/super-telegram-plugin
-
-# 2. Install from marketplace
-claude plugin install telegram-router@super-telegram-plugin
+claude plugin marketplace add https://github.com/curtis1215/super-telegram-plugin
+claude plugin install super-telegram@super-telegram-plugin
 ```
 
 The proxy auto-installs and starts the daemon on first session launch.
@@ -68,13 +65,13 @@ This plugin is a **drop-in replacement** for `telegram@claude-plugins-official`.
 - Bot token from `~/.claude/channels/telegram/.env`
 - Access policy from `~/.claude/channels/telegram/access.json`
 - All MCP tools: `reply`, `react`, `edit_message`, `download_attachment`
-- Skills: `/telegram:configure`, `/telegram:access`
+- Skills: `/super-telegram:configure`, `/super-telegram:access`
 - Channel notification format (`<channel source="telegram" ...>`)
 
 ### What's new
 
-- `/telegram:connect <name>` — register session for message routing
-- `/telegram:disconnect` — unregister session
+- `/super-telegram:connect <name>` — register session for message routing
+- `/super-telegram:disconnect` — unregister session
 - Telegram bot commands: `/list`, `/switch <name>`, `/status`, `/disconnect`
 - Multi-session support with active session switching
 - Daemon auto-start and heartbeat monitoring
@@ -87,8 +84,8 @@ This plugin is a **drop-in replacement** for `telegram@claude-plugins-official`.
    ```
 2. **Install** this plugin:
    ```bash
-   claude plugin marketplace add ~/Dev/super-telegram-plugin
-   claude plugin install telegram-router@super-telegram-plugin
+   claude plugin marketplace add https://github.com/curtis1215/super-telegram-plugin
+   claude plugin install super-telegram@super-telegram-plugin
    ```
 3. **Done**. Existing `.env` and `access.json` are reused automatically.
 
@@ -100,7 +97,7 @@ This plugin is a **drop-in replacement** for `telegram@claude-plugins-official`.
 
 ```bash
 # In Claude Code, register this session
-/telegram:connect research
+/super-telegram:connect research
 
 # In Telegram, switch to this session
 /switch research
@@ -136,9 +133,9 @@ telegram-router-plugin/
 │   └── signal-watcher.ts       # File signal mechanism
 ├── scripts/setup-daemon.ts     # Service installation
 └── skills/
-    ├── configure/SKILL.md      # /telegram:configure
-    ├── access/SKILL.md         # /telegram:access
-    └── connect/SKILL.md        # /telegram:connect
+    ├── configure/SKILL.md      # /super-telegram:configure
+    ├── access/SKILL.md         # /super-telegram:access
+    └── connect/SKILL.md        # /super-telegram:connect
 ```
 
 ## Development

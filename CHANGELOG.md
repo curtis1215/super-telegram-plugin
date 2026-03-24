@@ -2,6 +2,14 @@
 
 所有重要變更都會記錄在此檔案中。格式基於 [Keep a Changelog](https://keepachangelog.com/zh-TW/)，版本號遵循 [Semantic Versioning](https://semver.org/lang/zh-TW/)。
 
+## [1.3.0] - 2026-03-24
+
+### 新功能
+
+- 重新命名 plugin 為 `super-telegram`，skill 前綴變更為 `/super-telegram:*`
+- 將 `node_modules/` 納入版控，安裝時不再需要另行執行 `bun install`
+- 安裝來源改為 GitHub URL，支援 `claude plugin marketplace add https://github.com/...` 直接安裝
+
 ## [1.2.2] - 2026-03-24
 
 ### 錯誤修復

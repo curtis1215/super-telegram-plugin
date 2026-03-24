@@ -1,9 +1,9 @@
 {
   "name": "telegram-router",
-  "version": "1.2.2",
+  "version": "1.3.0",
   "type": "module",
   "scripts": {
-    "start": "bun run proxy/server.ts",
+    "start": "bun run bootstrap.ts",
     "daemon": "bun run daemon/router.ts",
     "daemon:install": "bun run scripts/setup-daemon.ts install",
     "daemon:uninstall": "bun run scripts/setup-daemon.ts uninstall",
