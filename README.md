@@ -42,8 +42,11 @@ This plugin solves all three by centralizing polling in a single daemon.
 ## Installation
 
 ```bash
-# Install as Claude Code plugin
-claude plugin add <path-to-this-directory>
+# 1. Register local directory as a marketplace source
+claude plugin marketplace add ~/Dev/super-telegram-plugin
+
+# 2. Install from marketplace
+claude plugin install telegram-router@super-telegram-plugin
 ```
 
 The proxy auto-installs and starts the daemon on first session launch.
@@ -84,7 +87,8 @@ This plugin is a **drop-in replacement** for `telegram@claude-plugins-official`.
    ```
 2. **Install** this plugin:
    ```bash
-   claude plugin add <path-to-telegram-router>
+   claude plugin marketplace add ~/Dev/super-telegram-plugin
+   claude plugin install telegram-router@super-telegram-plugin
    ```
 3. **Done**. Existing `.env` and `access.json` are reused automatically.
 
