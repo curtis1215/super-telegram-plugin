@@ -1,7 +1,7 @@
 import type { InboundMessage } from '../shared/protocol'
 
 export type SessionEntry = {
-  connId: string
+  connId: string | null
   name: string | null
   version: string
   lastPong: number
@@ -28,9 +28,19 @@ export class SessionManager {
 
     if (name !== null) {
       const existing = this.named.get(name)
-      if (existing && existing.connId !== connId) {
-        evictedConnId = existing.connId
-        this.connections.delete(existing.connId)
+      if (existing) {
+        if (existing.connId === null) {
+          // Reconnect: take over disconnected session
+          existing.connId = connId
+          existing.version = version
+          existing.lastPong = Date.now()
+          this.connections.set(connId, existing)
+          return null
+        } else if (existing.connId !== connId) {
+          // Evict active connection with same name
+          evictedConnId = existing.connId
+          this.connections.delete(existing.connId)
+        }
       }
       this.named.set(name, entry)
     }
@@ -46,8 +56,9 @@ export class SessionManager {
     if (entry.name !== null) {
       const current = this.named.get(entry.name)
       if (current && current.connId === connId) {
-        this.named.delete(entry.name)
-        if (this.activeSession === entry.name) this.activeSession = null
+        // Keep session name registered but mark as disconnected (connId = null)
+        // activeSession is preserved — messages will be buffered
+        current.connId = null
       }
       return entry.name
     }

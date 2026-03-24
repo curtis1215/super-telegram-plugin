@@ -36,18 +36,21 @@ describe('SessionManager', () => {
 
   // --- Unregistration ---
 
-  test('unregisterByConnId removes named session', () => {
+  test('unregisterByConnId keeps named session with null connId', () => {
     sm.register('conn-1', 'research', '1.0.0')
     const removed = sm.unregisterByConnId('conn-1')
     expect(removed).toBe('research')
-    expect(sm.getSession('research')).toBeNull()
+    const session = sm.getSession('research')
+    expect(session).not.toBeNull()
+    expect(session!.connId).toBeNull()
   })
 
-  test('unregisterByConnId clears activeSession if it was active', () => {
+  test('unregisterByConnId preserves activeSession when proxy disconnects', () => {
     sm.register('conn-1', 'research', '1.0.0')
     sm.setActiveSession('research')
     sm.unregisterByConnId('conn-1')
-    expect(sm.getActiveSession()).toBeNull()
+    expect(sm.getActiveSession()).toBe('research')
+    expect(sm.getActiveConnId()).toBeNull()
   })
 
   test('unregisterByConnId removes unnamed session', () => {
@@ -105,13 +108,26 @@ describe('SessionManager', () => {
     expect(after).toBeGreaterThanOrEqual(before)
   })
 
-  test('checkHeartbeats removes timed-out connections', () => {
+  test('checkHeartbeats removes timed-out connections but keeps session name', () => {
     sm.register('conn-1', 'research', '1.0.0')
     const session = sm.getSession('research')!
     ;(session as any).lastPong = Date.now() - 60_000
     const timedOut = sm.checkHeartbeats(5_000)
     expect(timedOut).toEqual(['conn-1'])
-    expect(sm.getSession('research')).toBeNull()
+    const afterTimeout = sm.getSession('research')
+    expect(afterTimeout).not.toBeNull()
+    expect(afterTimeout!.connId).toBeNull()
+  })
+
+  test('reconnect takes over disconnected session', () => {
+    sm.register('conn-1', 'research', '1.0.0')
+    sm.setActiveSession('research')
+    sm.unregisterByConnId('conn-1')
+    expect(sm.getActiveConnId()).toBeNull()
+    // New proxy reconnects with same name
+    sm.register('conn-2', 'research', '1.0.0')
+    expect(sm.getActiveSession()).toBe('research')
+    expect(sm.getActiveConnId()).toBe('conn-2')
   })
 
   test('checkHeartbeats does not remove healthy connections', () => {
