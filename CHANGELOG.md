@@ -2,6 +2,12 @@
 
 所有重要變更都會記錄在此檔案中。格式基於 [Keep a Changelog](https://keepachangelog.com/zh-TW/)，版本號遵循 [Semantic Versioning](https://semver.org/lang/zh-TW/)。
 
+## [1.5.1] - 2026-03-24
+
+### 錯誤修復
+
+- 移除 `launchctl kickstart -k` 的 `-k` 旗標，避免多 session 同時啟動時反覆殺掉運行中的 daemon 導致已連線 proxy 斷線
+
 ## [1.5.0] - 2026-03-24
 
 ### 新功能
