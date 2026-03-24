@@ -46,6 +46,12 @@ claude plugin marketplace add https://github.com/curtis1215/super-telegram-plugi
 claude plugin install super-telegram@super-telegram-plugin
 ```
 
+### Launch with plugin
+
+```bash
+claude --dangerously-skip-permissions --dangerously-load-development-channels plugin:super-telegram@super-telegram-plugin
+```
+
 The proxy auto-installs and starts the daemon on first session launch.
 
 ### Manual daemon management
