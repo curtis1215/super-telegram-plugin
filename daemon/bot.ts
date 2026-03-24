@@ -98,33 +98,29 @@ export class TelegramBot {
       const senderId = String(from.id)
       const access = this.config.accessManager.loadAccess()
 
-      const activeName = this.config.sessionManager.getActiveSession()
-      const sessions = this.config.sessionManager.getNamedSessions()
-      const sessionInfo = activeName
-        ? `Active session: ${activeName}`
-        : `No active session`
-      const countInfo = `Connected sessions: ${sessions.length}`
-
       if (access.allowFrom.includes(senderId)) {
         const name = from.username ? `@${from.username}` : senderId
+        const activeName = this.config.sessionManager.getActiveSession()
+        const sessions = this.config.sessionManager.getNamedSessions()
+        const sessionInfo = activeName ? `Active session: ${activeName}` : `No active session`
+        const countInfo = `Connected sessions: ${sessions.length}`
         await ctx.reply(`Paired as ${name}.\n${sessionInfo}\n${countInfo}`)
         return
       }
 
       for (const [code, p] of Object.entries(access.pending)) {
         if (p.senderId === senderId) {
-          await ctx.reply(
-            `Pending pairing — run in Claude Code:\n\n/telegram:access pair ${code}\n\n${sessionInfo}\n${countInfo}`,
-          )
+          await ctx.reply(`Pending pairing — run in Claude Code:\n\n/telegram:access pair ${code}`)
           return
         }
       }
 
-      await ctx.reply(`Not paired. Send me a message to get a pairing code.\n${sessionInfo}\n${countInfo}`)
+      await ctx.reply(`Not paired. Send me a message to get a pairing code.`)
     })
 
     bot.command('list', async ctx => {
       if (ctx.chat?.type !== 'private') return
+      if (!this.isAllowed(ctx)) return
       const sessions = this.config.sessionManager.getNamedSessions()
       if (sessions.length === 0) {
         await ctx.reply('No named sessions connected.')
@@ -136,6 +132,7 @@ export class TelegramBot {
 
     bot.command('switch', async ctx => {
       if (ctx.chat?.type !== 'private') return
+      if (!this.isAllowed(ctx)) return
       const args = ctx.match?.trim()
       if (!args) {
         await ctx.reply('Usage: /switch <name>')
@@ -159,6 +156,7 @@ export class TelegramBot {
 
     bot.command('disconnect', async ctx => {
       if (ctx.chat?.type !== 'private') return
+      if (!this.isAllowed(ctx)) return
       this.config.sessionManager.clearActiveSession()
       await ctx.reply('Active session cleared.')
     })
@@ -265,6 +263,15 @@ export class TelegramBot {
     bot.catch(err => {
       process.stderr.write(`telegram daemon: handler error (polling continues): ${err.error}\n`)
     })
+  }
+
+  /** Check if the sender is in the allowFrom list. Silently drops unauthorized users. */
+  private isAllowed(ctx: Context): boolean {
+    const from = ctx.from
+    if (!from) return false
+    const senderId = String(from.id)
+    const access = this.config.accessManager.loadAccess()
+    return access.allowFrom.includes(senderId)
   }
 
   private async handleInbound(

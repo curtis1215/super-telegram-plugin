@@ -109,9 +109,9 @@ const TOOLS = hasToken
               type: 'string',
               description: 'The message text to send',
             },
-            reply_to_message_id: {
+            reply_to: {
               type: 'string',
-              description: 'Optional message ID to reply to',
+              description: 'Message ID to thread under. Use message_id from the inbound <channel> block.',
             },
           },
           required: ['chat_id', 'text'],
@@ -243,11 +243,20 @@ mcp.setRequestHandler(CallToolRequestSchema, async (request) => {
   }
 })
 
+// --- Session name tracking ---
+
+let currentSessionName: string | null = null
+
 // --- Socket Client ---
 
 const socketClient = new SocketClient(SOCK_PATH, {
   onConnect() {
     process.stderr.write('telegram-proxy: connected to daemon\n')
+    // Re-register session name on reconnect
+    if (currentSessionName) {
+      socketClient.send({ type: 'register', name: currentSessionName, version: PROTOCOL_VERSION })
+      process.stderr.write(`telegram-proxy: re-registering as "${currentSessionName}"\n`)
+    }
   },
   onDisconnect() {
     process.stderr.write('telegram-proxy: disconnected from daemon\n')
@@ -301,8 +310,10 @@ const socketClient = new SocketClient(SOCK_PATH, {
 const signalWatcher = new SignalWatcher(SESSIONS_DIR, pid, sessionId, {
   onSignal(signal) {
     if (signal.action === 'connect' && signal.name) {
+      currentSessionName = signal.name
       socketClient.send({ type: 'register', name: signal.name, version: PROTOCOL_VERSION })
     } else if (signal.action === 'disconnect') {
+      currentSessionName = null
       socketClient.send({ type: 'unregister' })
     }
   },
@@ -323,8 +334,8 @@ async function ensureDaemon(): Promise<boolean> {
 
   try {
     if (platform === 'darwin') {
-      // Check for launchd plist
-      const plistPath = join(homedir(), 'Library', 'LaunchAgents', 'co.1pay.claude-telegram.plist')
+      const LAUNCHD_LABEL = 'com.claude.telegram-router'
+      const plistPath = join(homedir(), 'Library', 'LaunchAgents', `${LAUNCHD_LABEL}.plist`)
       if (!existsSync(plistPath)) {
         process.stderr.write('telegram-proxy: installing daemon service...\n')
         const { exited } = Bun.spawn(['bun', 'run', 'daemon:install'], {
@@ -334,14 +345,15 @@ async function ensureDaemon(): Promise<boolean> {
         })
         await exited
       }
-      // Kickstart the service
-      Bun.spawn(['launchctl', 'kickstart', '-k', 'gui/$(id -u)/co.1pay.claude-telegram'], {
+      // Kickstart the service — resolve UID at runtime, not via shell expansion
+      const uid = process.getuid?.() ?? 501
+      Bun.spawn(['launchctl', 'kickstart', '-k', `gui/${uid}/${LAUNCHD_LABEL}`], {
         stdout: 'pipe',
         stderr: 'pipe',
       })
     } else if (platform === 'linux') {
-      // Check for systemd service
-      const { exitCode } = await Bun.spawn(['systemctl', '--user', 'is-enabled', 'claude-telegram'], {
+      const SYSTEMD_UNIT = 'telegram-router'
+      const { exitCode } = await Bun.spawn(['systemctl', '--user', 'is-enabled', SYSTEMD_UNIT], {
         stdout: 'pipe',
         stderr: 'pipe',
       }).exited.then((code) => ({ exitCode: code }))
@@ -355,7 +367,7 @@ async function ensureDaemon(): Promise<boolean> {
         })
         await exited
       }
-      Bun.spawn(['systemctl', '--user', 'start', 'claude-telegram'], {
+      Bun.spawn(['systemctl', '--user', 'start', SYSTEMD_UNIT], {
         stdout: 'pipe',
         stderr: 'pipe',
       })
@@ -405,6 +417,7 @@ if (hasToken) {
   if (connected) {
     signalWatcher.start()
     if (ENV_SESSION_NAME) {
+      currentSessionName = ENV_SESSION_NAME
       socketClient.send({ type: 'register', name: ENV_SESSION_NAME, version: PROTOCOL_VERSION })
     }
   }
