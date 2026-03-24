@@ -26,7 +26,8 @@ export class SocketClient {
     this.socket = await Bun.connect({
       unix: this.sockPath,
       socket: {
-        open() {
+        open(socket) {
+          self.socket = socket as any
           self.buffer = ''
           self.callbacks.onConnect()
         },
