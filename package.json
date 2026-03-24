@@ -1,6 +1,6 @@
 {
   "name": "telegram-router",
-  "version": "1.5.3",
+  "version": "1.5.4",
   "type": "module",
   "scripts": {
     "start": "bun run proxy/server.ts",

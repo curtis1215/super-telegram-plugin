@@ -1,5 +1,5 @@
 {
   "name": "super-telegram",
   "description": "Telegram channel for Claude Code with centralized daemon routing",
-  "version": "1.5.3"
+  "version": "1.5.4"
 }
