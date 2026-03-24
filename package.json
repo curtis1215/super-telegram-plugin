@@ -3,7 +3,7 @@
   "version": "1.3.0",
   "type": "module",
   "scripts": {
-    "start": "bun run bootstrap.ts",
+    "start": "bun run proxy/server.ts",
     "daemon": "bun run daemon/router.ts",
     "daemon:install": "bun run scripts/setup-daemon.ts install",
     "daemon:uninstall": "bun run scripts/setup-daemon.ts uninstall",
