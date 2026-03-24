@@ -2,6 +2,13 @@
 
 所有重要變更都會記錄在此檔案中。格式基於 [Keep a Changelog](https://keepachangelog.com/zh-TW/)，版本號遵循 [Semantic Versioning](https://semver.org/lang/zh-TW/)。
 
+## [1.2.1] - 2026-03-24
+
+### 錯誤修復
+
+- 修正 `.mcp.json` 格式：加上 `mcpServers` 外層包裝，讓 Claude Code 能正確辨識並啟動 MCP server
+- 修正啟動指令，加上 `--shell=bun` 參數，與官方 plugin 格式一致
+
 ## [1.2.0] - 2026-03-24
 
 ### 新功能
