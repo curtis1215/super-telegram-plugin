@@ -2,6 +2,12 @@
 
 所有重要變更都會記錄在此檔案中。格式基於 [Keep a Changelog](https://keepachangelog.com/zh-TW/)，版本號遵循 [Semantic Versioning](https://semver.org/lang/zh-TW/)。
 
+## [1.5.3] - 2026-03-24
+
+### 錯誤修復
+
+- 修正 socket open callback 中 `this.socket` 尚未賦值導致 `onConnect` 中的 `send()` 全部失敗的問題
+
 ## [1.5.2] - 2026-03-24
 
 ### 錯誤修復
