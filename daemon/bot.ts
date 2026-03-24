@@ -507,7 +507,7 @@ export class TelegramBot {
   }
 
   async sendDirectMessage(chatId: string, text: string): Promise<void> {
-    await this.bot.api.sendMessage(chatId, text)
+    await this.bot.api.sendMessage(chatId, text).catch(() => {})
   }
 
   getBotUsername(): string {
