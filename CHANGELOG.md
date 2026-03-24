@@ -2,6 +2,14 @@
 
 所有重要變更都會記錄在此檔案中。格式基於 [Keep a Changelog](https://keepachangelog.com/zh-TW/)，版本號遵循 [Semantic Versioning](https://semver.org/lang/zh-TW/)。
 
+## [1.5.0] - 2026-03-24
+
+### 新功能
+
+- 新增 `access` MCP tool — 9 個 action 涵蓋配對審批、白名單管理、DM 策略、群組權限、送達設定
+- 新增 `configure` MCP tool — 查看狀態、設定/清除 bot token，未配置時也可使用
+- 所有 access 和 configure 操作完全程式化，不再依賴 LLM 操作檔案系統
+
 ## [1.4.0] - 2026-03-24
 
 ### 新功能
