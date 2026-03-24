@@ -513,8 +513,8 @@ async function ensureDaemon(): Promise<boolean> {
     return false
   }
 
-  // Wait up to 5s (10 retries x 500ms) for daemon to start
-  for (let i = 0; i < 10; i++) {
+  // Wait up to 15s (30 retries x 500ms) for daemon to start
+  for (let i = 0; i < 30; i++) {
     await new Promise((resolve) => setTimeout(resolve, 500))
     try {
       await socketClient.connect()
@@ -524,7 +524,7 @@ async function ensureDaemon(): Promise<boolean> {
     }
   }
 
-  process.stderr.write('telegram-proxy: daemon did not start within 5 seconds\n')
+  process.stderr.write('telegram-proxy: daemon did not start within 15 seconds, will keep retrying in background\n')
   return false
 }
 
@@ -774,15 +774,33 @@ await mcp.connect(new StdioServerTransport())
 
 if (hasToken) {
   const connected = await ensureDaemon()
-  if (connected) {
-    signalWatcher.start()
-    // Priority: ENV var > persisted file (already loaded into currentSessionName)
-    const nameToRegister = ENV_SESSION_NAME || currentSessionName
-    if (nameToRegister) {
-      currentSessionName = nameToRegister
-      if (ENV_SESSION_NAME) persistSessionName(ENV_SESSION_NAME)
-      socketClient.send({ type: 'register', name: nameToRegister, version: PROTOCOL_VERSION })
-      process.stderr.write(`telegram-proxy: auto-registering as "${nameToRegister}"\n`)
+  signalWatcher.start()
+
+  // Resolve session name: ENV var > persisted file
+  const nameToRegister = ENV_SESSION_NAME || currentSessionName
+  if (nameToRegister) {
+    currentSessionName = nameToRegister
+    if (ENV_SESSION_NAME) persistSessionName(ENV_SESSION_NAME)
+  }
+
+  if (connected && nameToRegister) {
+    socketClient.send({ type: 'register', name: nameToRegister, version: PROTOCOL_VERSION })
+    process.stderr.write(`telegram-proxy: auto-registering as "${nameToRegister}"\n`)
+  }
+
+  if (!connected) {
+    // Background retry loop — keep trying every 10s until connected
+    const retryConnect = async () => {
+      while (!socketClient.isConnected()) {
+        await new Promise((resolve) => setTimeout(resolve, 10_000))
+        try {
+          await socketClient.connect()
+          process.stderr.write('telegram-proxy: background retry connected to daemon\n')
+        } catch {
+          // Will retry
+        }
+      }
     }
+    retryConnect().catch(() => {})
   }
 }
