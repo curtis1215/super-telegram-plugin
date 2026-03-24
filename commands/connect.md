@@ -2,4 +2,4 @@
 description: "Connect or disconnect this session from Telegram message routing"
 ---
 
-Use the super-telegram:connect skill to handle this request.
+Call the connect_session tool with the provided name argument. If the user wants to disconnect, call the disconnect_session tool instead.

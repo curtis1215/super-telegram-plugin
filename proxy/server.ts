@@ -69,8 +69,8 @@ HOW IT WORKS:
 
 SESSION MANAGEMENT:
 - You are identified by a session name within the Telegram router
-- The /telegram:connect skill registers your session to receive messages
-- The /telegram:disconnect skill unregisters your session
+- Use the connect_session tool to register and receive messages
+- Use the disconnect_session tool to unregister
 - Only registered sessions receive inbound Telegram notifications
 
 BEST PRACTICES:
@@ -175,6 +175,28 @@ const TOOLS = hasToken
           required: ['chat_id', 'message_id', 'text'],
         },
       },
+      {
+        name: 'connect_session',
+        description: 'Register this session with a name to receive Telegram messages',
+        inputSchema: {
+          type: 'object' as const,
+          properties: {
+            name: {
+              type: 'string',
+              description: 'Session name for routing (e.g. "research", "support")',
+            },
+          },
+          required: ['name'],
+        },
+      },
+      {
+        name: 'disconnect_session',
+        description: 'Unregister this session from Telegram message routing',
+        inputSchema: {
+          type: 'object' as const,
+          properties: {},
+        },
+      },
     ]
   : []
 
@@ -191,6 +213,28 @@ mcp.setRequestHandler(CallToolRequestSchema, async (request) => {
   }
 
   const toolName = request.params.name
+
+  // --- Local tools (connect/disconnect) ---
+  if (toolName === 'connect_session') {
+    const name = request.params.arguments?.name as string
+    if (!name) {
+      return { content: [{ type: 'text', text: 'Session name is required' }], isError: true }
+    }
+    currentSessionName = name
+    const sent = socketClient.send({ type: 'register', name, version: PROTOCOL_VERSION })
+    if (!sent) {
+      return { content: [{ type: 'text', text: `Session name set to "${name}" but daemon is not connected.` }], isError: true }
+    }
+    return { content: [{ type: 'text', text: `Connected as "${name}"` }] }
+  }
+
+  if (toolName === 'disconnect_session') {
+    currentSessionName = null
+    socketClient.send({ type: 'unregister' })
+    return { content: [{ type: 'text', text: 'Disconnected from Telegram message routing' }] }
+  }
+
+  // --- Remote tools (forwarded to daemon) ---
   const validTools = ['reply', 'react', 'download_attachment', 'edit_message']
   if (!validTools.includes(toolName)) {
     return {
