@@ -2,6 +2,12 @@
 
 所有重要變更都會記錄在此檔案中。格式基於 [Keep a Changelog](https://keepachangelog.com/zh-TW/)，版本號遵循 [Semantic Versioning](https://semver.org/lang/zh-TW/)。
 
+## [1.5.5] - 2026-03-25
+
+### 錯誤修復
+
+- 加長 daemon 啟動等待時間至 15 秒，並加入背景 retry 機制，確保 daemon 啟動較慢時 proxy 仍能最終連上
+
 ## [1.5.4] - 2026-03-24
 
 ### 錯誤修復
