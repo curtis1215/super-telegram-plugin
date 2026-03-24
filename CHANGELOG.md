@@ -2,6 +2,12 @@
 
 所有重要變更都會記錄在此檔案中。格式基於 [Keep a Changelog](https://keepachangelog.com/zh-TW/)，版本號遵循 [Semantic Versioning](https://semver.org/lang/zh-TW/)。
 
+## [1.3.1] - 2026-03-24
+
+### 新功能
+
+- 新增 `commands/` 目錄，讓 `/super-telegram:*` 指令出現在 Claude Code autocomplete 下拉選單
+
 ## [1.3.0] - 2026-03-24
 
 ### 新功能
