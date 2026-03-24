@@ -2,6 +2,12 @@
 
 所有重要變更都會記錄在此檔案中。格式基於 [Keep a Changelog](https://keepachangelog.com/zh-TW/)，版本號遵循 [Semantic Versioning](https://semver.org/lang/zh-TW/)。
 
+## [1.1.0] - 2026-03-24
+
+### 新功能
+
+- 新增 `.claude-plugin/marketplace.json`，支援透過 `claude plugin marketplace add` 安裝流程
+
 ## [1.0.0] - 2026-03-24
 
 ### 新功能
