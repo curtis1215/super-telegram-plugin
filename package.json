@@ -1,0 +1,22 @@
+{
+  "name": "telegram-router",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "start": "bun run proxy/server.ts",
+    "daemon": "bun run daemon/router.ts",
+    "daemon:install": "bun run scripts/setup-daemon.ts install",
+    "daemon:uninstall": "bun run scripts/setup-daemon.ts uninstall",
+    "daemon:status": "bun run scripts/setup-daemon.ts status",
+    "test": "bun test",
+    "typecheck": "bun run tsc --noEmit"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "grammy": "^1.21.0"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "typescript": "^5.4.0"
+  }
+}
