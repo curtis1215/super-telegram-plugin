@@ -2,6 +2,12 @@
 
 所有重要變更都會記錄在此檔案中。格式基於 [Keep a Changelog](https://keepachangelog.com/zh-TW/)，版本號遵循 [Semantic Versioning](https://semver.org/lang/zh-TW/)。
 
+## [1.5.2] - 2026-03-24
+
+### 錯誤修復
+
+- 持久化 session name 至 `session-name` 檔案，新 proxy 啟動時自動讀取並向 daemon 註冊，解決 session 關閉後 Telegram 訊息無法送達的問題
+
 ## [1.5.1] - 2026-03-24
 
 ### 錯誤修復
