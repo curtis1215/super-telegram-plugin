@@ -8,7 +8,7 @@
       "name": "telegram-router",
       "description": "Telegram channel for Claude Code with centralized daemon routing and multi-session support",
       "category": "productivity",
-      "source": ".",
+      "source": "./",
       "homepage": "https://github.com/curtis1215/super-telegram-plugin"
     }
   ]
