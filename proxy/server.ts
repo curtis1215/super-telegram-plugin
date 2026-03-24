@@ -16,6 +16,7 @@ const STATE_DIR = process.env.TELEGRAM_STATE_DIR ?? join(homedir(), '.claude', '
 const SOCK_PATH = join(STATE_DIR, 'router.sock')
 const ENV_FILE = join(STATE_DIR, '.env')
 const SESSIONS_DIR = join(STATE_DIR, 'sessions')
+const SESSION_NAME_FILE = join(STATE_DIR, 'session-name')
 const PLUGIN_DIR = import.meta.dir.replace(/\/proxy$/, '')
 
 // --- Load .env ---
@@ -282,15 +283,17 @@ mcp.setRequestHandler(CallToolRequestSchema, async (request) => {
       return { content: [{ type: 'text', text: 'Session name is required' }], isError: true }
     }
     currentSessionName = name
+    persistSessionName(name)
     const sent = socketClient.send({ type: 'register', name, version: PROTOCOL_VERSION })
     if (!sent) {
-      return { content: [{ type: 'text', text: `Session name set to "${name}" but daemon is not connected.` }], isError: true }
+      return { content: [{ type: 'text', text: `Session name saved as "${name}" but daemon is not connected.` }], isError: true }
     }
     return { content: [{ type: 'text', text: `Connected as "${name}"` }] }
   }
 
   if (toolName === 'disconnect_session') {
     currentSessionName = null
+    persistSessionName(null)
     socketClient.send({ type: 'unregister' })
     return { content: [{ type: 'text', text: 'Disconnected from Telegram message routing' }] }
   }
@@ -353,9 +356,29 @@ mcp.setRequestHandler(CallToolRequestSchema, async (request) => {
   }
 })
 
-// --- Session name tracking ---
+// --- Session name tracking (persisted to file) ---
 
-let currentSessionName: string | null = null
+function readPersistedSessionName(): string | null {
+  try {
+    const name = readFileSync(SESSION_NAME_FILE, 'utf8').trim()
+    return name || null
+  } catch {
+    return null
+  }
+}
+
+function persistSessionName(name: string | null): void {
+  try {
+    mkdirSync(STATE_DIR, { recursive: true, mode: 0o700 })
+    if (name) {
+      writeFileSync(SESSION_NAME_FILE, name, { mode: 0o600 })
+    } else {
+      writeFileSync(SESSION_NAME_FILE, '', { mode: 0o600 })
+    }
+  } catch {}
+}
+
+let currentSessionName: string | null = readPersistedSessionName()
 
 // --- Socket Client ---
 
@@ -753,9 +776,13 @@ if (hasToken) {
   const connected = await ensureDaemon()
   if (connected) {
     signalWatcher.start()
-    if (ENV_SESSION_NAME) {
-      currentSessionName = ENV_SESSION_NAME
-      socketClient.send({ type: 'register', name: ENV_SESSION_NAME, version: PROTOCOL_VERSION })
+    // Priority: ENV var > persisted file (already loaded into currentSessionName)
+    const nameToRegister = ENV_SESSION_NAME || currentSessionName
+    if (nameToRegister) {
+      currentSessionName = nameToRegister
+      if (ENV_SESSION_NAME) persistSessionName(ENV_SESSION_NAME)
+      socketClient.send({ type: 'register', name: nameToRegister, version: PROTOCOL_VERSION })
+      process.stderr.write(`telegram-proxy: auto-registering as "${nameToRegister}"\n`)
     }
   }
 }
