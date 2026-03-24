@@ -2,6 +2,17 @@
 
 所有重要變更都會記錄在此檔案中。格式基於 [Keep a Changelog](https://keepachangelog.com/zh-TW/)，版本號遵循 [Semantic Versioning](https://semver.org/lang/zh-TW/)。
 
+## [1.2.0] - 2026-03-24
+
+### 新功能
+
+- 新增 `.mcp.json`，讓 Claude Code 能自動啟動 MCP proxy server 並註冊 skills
+
+### 錯誤修復
+
+- 修正 `.mcp.json` 為 plugin-scoped 格式（移除 `mcpServers` 外層包裝）
+- 修正 README 安裝指令為正確的 marketplace 兩步驟流程
+
 ## [1.1.0] - 2026-03-24
 
 ### 新功能
