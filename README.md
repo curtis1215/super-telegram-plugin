@@ -65,8 +65,10 @@ bun run daemon:status     # Check if running
 ## Update
 
 ```bash
-claude plugin update super-telegram@super-telegram-plugin
+cd ~/.claude/plugins/marketplaces/super-telegram-plugin && git pull origin main
 ```
+
+> **Note**: `claude plugin update` currently has a [known issue](https://github.com/anthropics/claude-code/issues/44058) where it fetches but doesn't pull, so use the command above instead.
 
 Restart Claude Code session after update. The daemon will automatically detect the version mismatch when a new proxy connects and restart itself to pick up the updated code. No manual daemon restart needed.
 
