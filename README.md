@@ -62,6 +62,14 @@ bun run daemon:uninstall  # Remove service
 bun run daemon:status     # Check if running
 ```
 
+## Update
+
+```bash
+claude plugin marketplace add https://github.com/curtis1215/super-telegram-plugin
+```
+
+The daemon will automatically detect the version mismatch when a new proxy connects and restart itself to pick up the updated code. No manual daemon restart needed.
+
 ## Migration from Official Plugin
 
 This plugin is a **drop-in replacement** for `telegram@claude-plugins-official`.

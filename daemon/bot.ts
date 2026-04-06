@@ -102,8 +102,9 @@ export class TelegramBot {
         const name = from.username ? `@${from.username}` : senderId
         const activeName = this.config.sessionManager.getActiveSession()
         const sessions = this.config.sessionManager.getNamedSessions()
+        const connected = sessions.filter(s => s.isConnected).length
         const sessionInfo = activeName ? `Active session: ${activeName}` : `No active session`
-        const countInfo = `Connected sessions: ${sessions.length}`
+        const countInfo = `Connected: ${connected} / Registered: ${sessions.length}`
         await ctx.reply(`Paired as ${name}.\n${sessionInfo}\n${countInfo}`)
         return
       }
@@ -126,7 +127,11 @@ export class TelegramBot {
         await ctx.reply('No named sessions connected.')
         return
       }
-      const lines = sessions.map(s => `${s.isActive ? '●' : '○'} ${s.name}`)
+      const lines = sessions.map(s => {
+        const icon = s.isActive ? '●' : s.isConnected ? '○' : '◌'
+        const suffix = !s.isConnected ? ' (disconnected)' : ''
+        return `${icon} ${s.name}${suffix}`
+      })
       await ctx.reply(lines.join('\n'))
     })
 

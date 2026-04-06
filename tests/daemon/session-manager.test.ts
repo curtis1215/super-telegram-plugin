@@ -18,6 +18,7 @@ describe('SessionManager', () => {
       name: 'research',
       version: '1.0.0',
       lastPong: expect.any(Number),
+      disconnectedAt: null,
     })
   })
 
@@ -147,7 +148,59 @@ describe('SessionManager', () => {
     const sessions = sm.getNamedSessions()
     expect(sessions).toHaveLength(2)
     expect(sessions.find(s => s.name === 'research')!.isActive).toBe(true)
+    expect(sessions.find(s => s.name === 'research')!.isConnected).toBe(true)
     expect(sessions.find(s => s.name === 'polyfun')!.isActive).toBe(false)
+    expect(sessions.find(s => s.name === 'polyfun')!.isConnected).toBe(true)
+  })
+
+  test('getNamedSessions shows disconnected sessions as not connected', () => {
+    sm.register('conn-1', 'research', '1.0.0')
+    sm.unregisterByConnId('conn-1')
+    const sessions = sm.getNamedSessions()
+    expect(sessions).toHaveLength(1)
+    expect(sessions[0].isConnected).toBe(false)
+  })
+
+  // --- Stale cleanup ---
+
+  test('cleanupStale removes sessions disconnected longer than maxAge', () => {
+    sm.register('conn-1', 'stale-session', '1.0.0')
+    sm.unregisterByConnId('conn-1')
+    // Backdate disconnectedAt
+    const session = sm.getSession('stale-session')!
+    ;(session as any).disconnectedAt = Date.now() - 10 * 60_000
+    const removed = sm.cleanupStale(5 * 60_000)
+    expect(removed).toEqual(['stale-session'])
+    expect(sm.getSession('stale-session')).toBeNull()
+  })
+
+  test('cleanupStale does not remove recently disconnected sessions', () => {
+    sm.register('conn-1', 'recent', '1.0.0')
+    sm.unregisterByConnId('conn-1')
+    const removed = sm.cleanupStale(5 * 60_000)
+    expect(removed).toHaveLength(0)
+    expect(sm.getSession('recent')).not.toBeNull()
+  })
+
+  test('cleanupStale does not remove connected sessions', () => {
+    sm.register('conn-1', 'alive', '1.0.0')
+    const removed = sm.cleanupStale(0) // Even with 0 timeout
+    expect(removed).toHaveLength(0)
+    expect(sm.getSession('alive')).not.toBeNull()
+  })
+
+  test('cleanupStale clears activeSession and drains buffer if stale session was active', () => {
+    sm.register('conn-1', 'active-stale', '1.0.0')
+    sm.setActiveSession('active-stale')
+    sm.unregisterByConnId('conn-1')
+    // Buffer some messages while disconnected
+    sm.bufferMessage({ type: 'message', content: 'orphan', meta: { chat_id: '1', user: 'u', user_id: '1', ts: '' } })
+    expect(sm.getBufferSize()).toBe(1)
+    const session = sm.getSession('active-stale')!
+    ;(session as any).disconnectedAt = Date.now() - 10 * 60_000
+    sm.cleanupStale(5 * 60_000)
+    expect(sm.getActiveSession()).toBeNull()
+    expect(sm.getBufferSize()).toBe(0)
   })
 
   // --- Message buffer ---
