@@ -458,7 +458,51 @@ const signalWatcher = new SignalWatcher(SESSIONS_DIR, pid, sessionId, {
 
 // --- Daemon auto-start ---
 
+const VERSION_FILE = join(STATE_DIR, 'router-version')
+
+function restartDaemonService(): void {
+  const platform = process.platform
+  if (platform === 'darwin') {
+    const LAUNCHD_LABEL = 'com.claude.telegram-router'
+    const uid = process.getuid?.() ?? 501
+    process.stderr.write(`telegram-proxy: restarting daemon (version mismatch)...\n`)
+    Bun.spawn(['launchctl', 'kickstart', '-k', `gui/${uid}/${LAUNCHD_LABEL}`], {
+      stdout: 'pipe',
+      stderr: 'pipe',
+    })
+  } else if (platform === 'linux') {
+    process.stderr.write(`telegram-proxy: restarting daemon (version mismatch)...\n`)
+    Bun.spawn(['systemctl', '--user', 'restart', 'telegram-router'], {
+      stdout: 'pipe',
+      stderr: 'pipe',
+    })
+  }
+}
+
 async function ensureDaemon(): Promise<boolean> {
+  // Check if running daemon is outdated
+  try {
+    const daemonVersion = readFileSync(VERSION_FILE, 'utf8').trim()
+    if (daemonVersion && daemonVersion < APP_VERSION) {
+      process.stderr.write(`telegram-proxy: daemon version ${daemonVersion} < proxy version ${APP_VERSION}, restarting daemon\n`)
+      restartDaemonService()
+      // Wait for daemon to restart and reconnect
+      for (let i = 0; i < 30; i++) {
+        await new Promise((resolve) => setTimeout(resolve, 500))
+        try {
+          await socketClient.connect()
+          return true
+        } catch {
+          // Keep waiting
+        }
+      }
+      process.stderr.write('telegram-proxy: daemon did not restart within 15 seconds\n')
+      return false
+    }
+  } catch {
+    // No version file — daemon might be old or not installed, continue normal flow
+  }
+
   // Try connecting first
   try {
     await socketClient.connect()

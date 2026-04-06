@@ -11,6 +11,7 @@ import { PROTOCOL_VERSION, type ProxyMessage, type DaemonMessage, type InboundMe
 const STATE_DIR = process.env.TELEGRAM_STATE_DIR ?? join(homedir(), '.claude', 'channels', 'telegram')
 const SOCK_PATH = join(STATE_DIR, 'router.sock')
 const PID_FILE = join(STATE_DIR, 'router.pid')
+const VERSION_FILE = join(STATE_DIR, 'router-version')
 const STATE_FILE = join(STATE_DIR, 'router-state.json')
 const LOG_FILE = join(STATE_DIR, 'router.log')
 const ENV_FILE = join(STATE_DIR, '.env')
@@ -125,9 +126,10 @@ async function main(): Promise<void> {
     process.stderr.write(`telegram daemon: uncaughtException: ${err}\n`)
   })
 
-  // 4. Create STATE_DIR, write PID file
+  // 4. Create STATE_DIR, write PID + version files
   mkdirSync(STATE_DIR, { recursive: true, mode: 0o700 })
   writeFileSync(PID_FILE, String(process.pid) + '\n', { mode: 0o600 })
+  writeFileSync(VERSION_FILE, DAEMON_APP_VERSION + '\n', { mode: 0o600 })
 
   // 5. Rotate log on startup
   rotateLog()
