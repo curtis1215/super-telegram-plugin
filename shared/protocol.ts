@@ -6,6 +6,7 @@ export type RegisterMessage = {
   type: 'register'
   name: string
   version: string
+  appVersion?: string
 }
 
 export type UnregisterMessage = {

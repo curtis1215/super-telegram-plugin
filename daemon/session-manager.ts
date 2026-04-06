@@ -5,11 +5,13 @@ export type SessionEntry = {
   name: string | null
   version: string
   lastPong: number
+  disconnectedAt: number | null
 }
 
 export type NamedSessionInfo = {
   name: string
   isActive: boolean
+  isConnected: boolean
 }
 
 const MAX_BUFFER = 50
@@ -24,7 +26,7 @@ export class SessionManager {
     let evictedConnId: string | null = null
     this.unregisterByConnId(connId)
 
-    const entry: SessionEntry = { connId, name, version, lastPong: Date.now() }
+    const entry: SessionEntry = { connId, name, version, lastPong: Date.now(), disconnectedAt: null }
 
     if (name !== null) {
       const existing = this.named.get(name)
@@ -34,6 +36,7 @@ export class SessionManager {
           existing.connId = connId
           existing.version = version
           existing.lastPong = Date.now()
+          existing.disconnectedAt = null
           this.connections.set(connId, existing)
           return null
         } else if (existing.connId !== connId) {
@@ -59,6 +62,7 @@ export class SessionManager {
         // Keep session name registered but mark as disconnected (connId = null)
         // activeSession is preserved — messages will be buffered
         current.connId = null
+        current.disconnectedAt = Date.now()
       }
       return entry.name
     }
@@ -104,7 +108,25 @@ export class SessionManager {
   getNamedSessions(): NamedSessionInfo[] {
     return Array.from(this.named.values())
       .filter((e): e is SessionEntry & { name: string } => e.name !== null)
-      .map(e => ({ name: e.name, isActive: e.name === this.activeSession }))
+      .map(e => ({ name: e.name, isActive: e.name === this.activeSession, isConnected: e.connId !== null }))
+  }
+
+  /** Remove named sessions that have been disconnected longer than maxAgeMs */
+  cleanupStale(maxAgeMs: number): string[] {
+    const now = Date.now()
+    const removed: string[] = []
+    for (const [name, entry] of this.named) {
+      if (entry.connId === null && entry.disconnectedAt !== null && now - entry.disconnectedAt > maxAgeMs) {
+        // Clear active session and drain orphaned buffer if it's the one being removed
+        if (this.activeSession === name) {
+          this.activeSession = null
+          this.messageBuffer = []
+        }
+        this.named.delete(name)
+        removed.push(name)
+      }
+    }
+    return removed
   }
 
   getUnnamedCount(): number {

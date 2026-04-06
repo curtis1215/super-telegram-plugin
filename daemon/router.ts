@@ -15,9 +15,17 @@ const STATE_FILE = join(STATE_DIR, 'router-state.json')
 const LOG_FILE = join(STATE_DIR, 'router.log')
 const ENV_FILE = join(STATE_DIR, '.env')
 
+const DAEMON_APP_VERSION: string = (() => {
+  try {
+    const pkgPath = join(import.meta.dir, '..', 'package.json')
+    return JSON.parse(readFileSync(pkgPath, 'utf8')).version
+  } catch { return '0.0.0' }
+})()
+
 const HEARTBEAT_INTERVAL = 30_000
 const HEARTBEAT_TIMEOUT = 35_000
 const BUFFER_RECONNECT_TIMEOUT = 30_000
+const STALE_SESSION_TIMEOUT = 5 * 60_000 // 5 minutes
 const LOG_MAX_SIZE = 10 * 1024 * 1024
 const LOG_MAX_FILES = 3
 
@@ -169,14 +177,23 @@ async function main(): Promise<void> {
           const name = msg.name
           const version = msg.version
 
-          // Check version mismatch
+          // Check protocol version mismatch
           if (version !== PROTOCOL_VERSION) {
             socketServer.send(connId, {
               type: 'version_mismatch',
               daemon_version: PROTOCOL_VERSION,
               proxy_version: version,
             })
-            process.stderr.write(`telegram daemon: version mismatch for "${name}": daemon=${PROTOCOL_VERSION} proxy=${version}\n`)
+            process.stderr.write(`telegram daemon: protocol version mismatch for "${name}": daemon=${PROTOCOL_VERSION} proxy=${version}\n`)
+          }
+
+          // Check app version — if proxy is newer, daemon should restart to pick up new code
+          const proxyAppVersion = msg.appVersion
+          if (proxyAppVersion && proxyAppVersion > DAEMON_APP_VERSION) {
+            process.stderr.write(`telegram daemon: newer proxy detected — daemon=${DAEMON_APP_VERSION} proxy=${proxyAppVersion}, restarting to update\n`)
+            saveState(sessionManager)
+            // Exit gracefully — launchd/systemd will restart with updated code
+            setTimeout(() => process.exit(0), 500)
           }
 
           // Evict old holder of the same name
@@ -273,6 +290,12 @@ async function main(): Promise<void> {
       process.stderr.write(`telegram daemon: heartbeat timeout for: ${connId}\n`)
       socketServer.send(connId, { type: 'unregistered', reason: 'heartbeat_timeout' })
       socketServer.disconnect(connId)
+    }
+
+    // Clean up stale disconnected sessions
+    const stale = sessionManager.cleanupStale(STALE_SESSION_TIMEOUT)
+    for (const name of stale) {
+      process.stderr.write(`telegram daemon: removed stale session: "${name}"\n`)
     }
 
     // Save state

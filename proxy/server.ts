@@ -18,6 +18,10 @@ const ENV_FILE = join(STATE_DIR, '.env')
 const SESSIONS_DIR = join(STATE_DIR, 'sessions')
 const SESSION_NAME_FILE = join(STATE_DIR, 'session-name')
 const PLUGIN_DIR = import.meta.dir.replace(/\/proxy$/, '')
+const APP_VERSION: string = (() => {
+  try { return JSON.parse(readFileSync(join(PLUGIN_DIR, 'package.json'), 'utf8')).version }
+  catch { return '0.0.0' }
+})()
 
 // --- Load .env ---
 
@@ -284,7 +288,7 @@ mcp.setRequestHandler(CallToolRequestSchema, async (request) => {
     }
     currentSessionName = name
     persistSessionName(name)
-    const sent = socketClient.send({ type: 'register', name, version: PROTOCOL_VERSION })
+    const sent = socketClient.send({ type: 'register', name, version: PROTOCOL_VERSION, appVersion: APP_VERSION })
     if (!sent) {
       return { content: [{ type: 'text', text: `Session name saved as "${name}" but daemon is not connected.` }], isError: true }
     }
@@ -387,7 +391,7 @@ const socketClient = new SocketClient(SOCK_PATH, {
     process.stderr.write('telegram-proxy: connected to daemon\n')
     // Re-register session name on reconnect
     if (currentSessionName) {
-      socketClient.send({ type: 'register', name: currentSessionName, version: PROTOCOL_VERSION })
+      socketClient.send({ type: 'register', name: currentSessionName, version: PROTOCOL_VERSION, appVersion: APP_VERSION })
       process.stderr.write(`telegram-proxy: re-registering as "${currentSessionName}"\n`)
     }
   },
@@ -444,7 +448,7 @@ const signalWatcher = new SignalWatcher(SESSIONS_DIR, pid, sessionId, {
   onSignal(signal) {
     if (signal.action === 'connect' && signal.name) {
       currentSessionName = signal.name
-      socketClient.send({ type: 'register', name: signal.name, version: PROTOCOL_VERSION })
+      socketClient.send({ type: 'register', name: signal.name, version: PROTOCOL_VERSION, appVersion: APP_VERSION })
     } else if (signal.action === 'disconnect') {
       currentSessionName = null
       socketClient.send({ type: 'unregister' })
@@ -784,7 +788,7 @@ if (hasToken) {
   }
 
   if (connected && nameToRegister) {
-    socketClient.send({ type: 'register', name: nameToRegister, version: PROTOCOL_VERSION })
+    socketClient.send({ type: 'register', name: nameToRegister, version: PROTOCOL_VERSION, appVersion: APP_VERSION })
     process.stderr.write(`telegram-proxy: auto-registering as "${nameToRegister}"\n`)
   }
 
