@@ -49,6 +49,11 @@ if (platform === 'darwin') {
 </dict>
 </plist>`
 
+    // Unload existing service first (ignore errors if not loaded)
+    if (existsSync(plistPath)) {
+      Bun.spawnSync(['launchctl', 'unload', plistPath])
+    }
+
     writeFileSync(plistPath, plist)
     console.log(`Installed: ${plistPath}`)
 
